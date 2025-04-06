@@ -17,7 +17,7 @@ bool PressedButton = false;
 bool BallEaten = false;
 
 int BallX, BallY, ANSBallX, ANSBallY;
-int SnakeX = (COLS/2) + 4;
+int SnakeX = COLS/2;
 int SnakeY = ROWS/2;
 int VSnakeX = 1;
 int VSnakeY = 0;
