@@ -291,7 +291,7 @@ int main(int argc, char* argv[]) {
 
 	consoleSelect(&topScreen);
 	iprintf("\x1b[2J");
-	iprintf("Snake DS\nWritten By Abdelali221\nGithub : \nhttps://github.com/abdelali221/\n");
+	iprintf("SnakeDS\nMade By Abdelali221\nGithub : \nhttps://github.com/abdelali221/\n");
 	iprintf("\nPress A to start...");
 
 	while(!Resume) {
@@ -303,12 +303,8 @@ int main(int argc, char* argv[]) {
 		}
 		swiWaitForVBlank();
 	}
-
-	Resume = false;
-
 	iprintf("\x1b[2J");
-	DifficultySelect();
-	
+	DifficultySelect();	
 	RenderBorders(true);
 
 	while (1) {
