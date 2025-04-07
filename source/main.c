@@ -26,6 +26,7 @@ int Score = 0;
 int SnakeLength = 2;
 int counter = 0;
 int SnakePOSbuffer[6000][2];
+int Speed;
 
 static void CheckInput() {
 	scanKeys();
@@ -110,6 +111,58 @@ static void RenderSnake() {
 
 }
 
+static void DifficultySelect() {
+	int Selection = 10;
+	POSCursor(4, 8);
+	iprintf("Choose the difficulty :");
+	POSCursor(10, 10);
+	iprintf("Easy");
+	POSCursor(10, 12);
+	iprintf("Medium");
+	POSCursor(10, 14);
+	iprintf("Hard");
+	POSCursor(9, Selection);
+	iprintf(">");
+	while(1) {
+		scanKeys();
+		int pressed = keysDown();
+
+		if ((pressed & KEY_DOWN) && Selection < 14) {
+			POSCursor(9, Selection);
+			iprintf(" ");
+			Selection = Selection + 2;
+			POSCursor(9, Selection);
+			iprintf(">");
+		} else if ((pressed & KEY_UP) && Selection > 10) {
+			POSCursor(9, Selection);
+			iprintf(" ");
+			Selection = Selection - 2;
+			POSCursor(9, Selection);
+			iprintf(">");
+		} else if (pressed & KEY_A) {
+			iprintf("\x1b[2J");
+			switch (Selection)
+			{
+				case 10:
+					Speed = 500;
+				break;
+				
+				case 12:
+					Speed = 250;
+				break;
+
+				case 14:
+					Speed = 100;
+				break;
+
+				default:
+				break;
+			}
+			return;
+		}
+	}
+}
+
 static void GameOver() {
 	iprintf("\x1b[2J");
 	POSCursor(10, 10);
@@ -129,6 +182,7 @@ static void GameOver() {
 			exit(0);
 		} else if (pressed & KEY_A) {
 			iprintf("\x1b[2J");
+			DifficultySelect();
 			RenderBorders(true);
 			return;
 		}
@@ -153,19 +207,19 @@ static void GenerateBall() {
 static void Loose() {
 	iprintf("\x1b[2J");
 	sleep(1000);
-	RenderBorders(false);
 	GenBall = true;
 	Start = false;
 	for (size_t i = 1; i < 254; i++) {
 		SnakePOSbuffer[i][0] = 0;
 		SnakePOSbuffer[i][1] = 0;
 	}
-	SnakeX = (COLS/2) + 4;
+	SnakeX = COLS/2;
 	SnakeY = ROWS/2;
 	VSnakeX = 0;
 	VSnakeY = 0;
 	SnakeLength = 2;
 	if (Lifes > 0) {
+		RenderBorders(false);
 		Lifes--;
 	} else {
 		GameOver();
@@ -205,14 +259,14 @@ static void PrintGameStats() {
 }
 
 static void RunGame() {
-	sleep(500);
+	sleep(Speed);
 	PrintGameStats();
-	if (counter < 4) {
+	if (counter < 4*(1000/Speed)) {
 		counter++;
 	} else {
 		counter = 0;
 	}
-	if (counter == 3 && GenBall) {
+	if (counter == 3*(1000/Speed) && GenBall) {
 		GenerateBall();
 		GenBall = false;
 	}
@@ -250,7 +304,11 @@ int main(int argc, char* argv[]) {
 		swiWaitForVBlank();
 	}
 
+	Resume = false;
+
 	iprintf("\x1b[2J");
+	DifficultySelect();
+	
 	RenderBorders(true);
 
 	while (1) {
