@@ -304,6 +304,7 @@ int main(int argc, char* argv[]) {
 		swiWaitForVBlank();
 	}
 	iprintf("\x1b[2J");
+	sleep(200);
 	DifficultySelect();	
 	RenderBorders(true);
 
