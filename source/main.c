@@ -15,6 +15,7 @@ bool GenBall = true;
 bool Start = false;
 bool PressedButton = false;
 bool BallEaten = false;
+bool doPause = false;
 
 int BallX, BallY, ANSBallX, ANSBallY;
 int SnakeX = COLS/2;
@@ -33,7 +34,7 @@ static void CheckInput() {
 	int pressed = keysDown();
 	
 	if (pressed & KEY_START) {
-		exit(0);
+		doPause = true;
 	} else if ((pressed & KEY_UP) && (VSnakeX != 0 || !Start) && !PressedButton) {
 		PressedButton = true;
 		if (!Start) {
@@ -258,9 +259,43 @@ static void PrintGameStats() {
 	consoleSelect(&topScreen);
 }
 
+static void Pause() {
+	iprintf("\x1b[2J");
+	POSCursor(12, 10);
+	iprintf("Paused!");
+	POSCursor(7, 12);
+	iprintf("Press Start to resume");
+	POSCursor(3, 13);
+	iprintf("Or Select to quit the game");
+	while (1) {
+		scanKeys();
+		int pressed = keysDown();
+		if (pressed & KEY_START) {
+			iprintf("\x1b[2J");
+			RenderBorders(false);
+			for (size_t i = 1; i < SnakeLength; i++) {
+				POSCursor(SnakePOSbuffer[i][0], SnakePOSbuffer[i][1]);
+				printf("#");
+			}
+			if (!BallEaten && !GenBall) {
+				POSCursor(BallX, BallY);
+				printf("O");
+			}			
+			PrintGameStats();
+			doPause = false;
+			return;
+		} else if (pressed & KEY_SELECT) {
+			exit(0);
+		}
+	}
+}
+
 static void RunGame() {
 	sleep(Speed);
 	PrintGameStats();
+	if (doPause) {
+		Pause();
+	}
 	if (counter < 4*(1000/Speed)) {
 		counter++;
 	} else {
