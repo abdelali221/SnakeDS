@@ -4,3 +4,4 @@ build/SnakeDS.lst
 SnakeDS.nds
 SnakeDS.elf
 build/main.o
+/build

@@ -1,6 +1,9 @@
 #include <nds.h>
 #include <stdio.h>
 #include <time.h>
+#include <maxmod9.h>
+#include "soundbank.h"
+#include "soundbank_bin.h"
 
 PrintConsole topScreen;
 PrintConsole bottomScreen;
@@ -22,12 +25,44 @@ int SnakeX = COLS/2;
 int SnakeY = ROWS/2;
 int VSnakeX = 1;
 int VSnakeY = 0;
-int Lifes = 3;
+int Lives = 3;
 int Score = 0;
 int SnakeLength = 2;
 int counter = 0;
 int SnakePOSbuffer[6000][2];
 int Speed;
+
+mm_sound_effect increase = {
+	{ SFX_INCREASE } ,			// id
+	(int)(1.0f * (1<<10)),	// rate
+	0,		// handle
+	255,	// volume
+	0,		// panning
+};
+
+mm_sound_effect died = {
+	{ SFX_DIED } ,			// id
+	(int)(1.0f * (1<<10)),	// rate
+	0,		// handle
+	255,	// volume
+	0,		// panning
+};
+
+mm_sound_effect lost = {
+	{ SFX_LOST } ,			// id
+	(int)(1.0f * (1<<10)),	// rate
+	0,		// handle
+	255,	// volume
+	0,		// panning
+};
+
+mm_sound_effect start = {
+	{ SFX_START } ,			// id
+	(int)(1.0f * (1<<10)),	// rate
+	0,		// handle
+	255,	// volume
+	0,		// panning
+};
 
 static void CheckInput() {
 	scanKeys();
@@ -80,7 +115,7 @@ void POSCursor(uint8_t X, uint8_t Y) {
 	iprintf("\x1b[%d;%dH", Y, X);
 }
 
-static void RenderBorders(bool DELAY) {
+static void RenderBorders(bool DELAY, bool PLAYSOUND) {
 	for (size_t Y = VER_OFFSET; Y <= ROWS; Y++) {
   
 		for (size_t X = HOR_OFFSET; X <= COLS; X++) {
@@ -93,6 +128,9 @@ static void RenderBorders(bool DELAY) {
 		  		iprintf("#");
   			}
 		}
+	}
+	if (PLAYSOUND) {
+		mmEffectEx(&start);
 	}
 }
 
@@ -165,7 +203,6 @@ static void DifficultySelect() {
 }
 
 static void GameOver() {
-	iprintf("\x1b[2J");
 	POSCursor(10, 10);
 	iprintf("Game Over!");
 	POSCursor(8, 12);
@@ -184,7 +221,7 @@ static void GameOver() {
 		} else if (pressed & KEY_A) {
 			iprintf("\x1b[2J");
 			DifficultySelect();
-			RenderBorders(true);
+			RenderBorders(true, true);
 			return;
 		}
 	}
@@ -207,7 +244,6 @@ static void GenerateBall() {
 
 static void Loose() {
 	iprintf("\x1b[2J");
-	sleep(1000);
 	GenBall = true;
 	Start = false;
 	for (size_t i = 1; i < 254; i++) {
@@ -219,12 +255,16 @@ static void Loose() {
 	VSnakeX = 0;
 	VSnakeY = 0;
 	SnakeLength = 2;
-	if (Lifes > 0) {
-		RenderBorders(false);
-		Lifes--;
+	if (Lives > 0) {
+		mmEffectEx(&lost);
+		sleep(1000);
+		RenderBorders(false, true);
+		Lives--;
 	} else {
+		mmEffectEx(&died);
+		sleep(2000);
 		GameOver();
-		Lifes = 3;
+		Lives = 3;
 		Score = 0;
 	}
 }
@@ -243,6 +283,7 @@ static void ManageSnakePos() {
 	}
 		
 	if (SnakeX == BallX && SnakeY == BallY && !BallEaten) {
+		mmEffectEx(&increase);
 		Score++;
 		SnakeLength++;
 		GenBall = true;
@@ -255,7 +296,7 @@ static void PrintGameStats() {
 	consoleSelect(&bottomScreen);
 	POSCursor(0, 0);
 	iprintf(" Score : %d \n", Score);
-	iprintf(" Lifes : %d ", Lifes);
+	iprintf(" Lives : %d ", Lives);
 	consoleSelect(&topScreen);
 }
 
@@ -272,7 +313,7 @@ static void Pause() {
 		int pressed = keysDown();
 		if (pressed & KEY_START) {
 			iprintf("\x1b[2J");
-			RenderBorders(false);
+			RenderBorders(false, false);
 			for (size_t i = 1; i < SnakeLength; i++) {
 				POSCursor(SnakePOSbuffer[i][0], SnakePOSbuffer[i][1]);
 				printf("#");
@@ -314,6 +355,11 @@ static void RunGame() {
 //---------------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
 //---------------------------------------------------------------------------------
+	mmInitDefaultMem((mm_addr)soundbank_bin);
+	mmLoadEffect( SFX_START );
+	mmLoadEffect( SFX_DIED );
+	mmLoadEffect( SFX_INCREASE );
+	mmLoadEffect( SFX_LOST );
 
 	videoSetMode(MODE_0_2D);
 	videoSetModeSub(MODE_0_2D);
@@ -341,7 +387,7 @@ int main(int argc, char* argv[]) {
 	iprintf("\x1b[2J");
 	sleep(200);
 	DifficultySelect();	
-	RenderBorders(true);
+	RenderBorders(true, true);
 
 	while (1) {
 		RunGame();
