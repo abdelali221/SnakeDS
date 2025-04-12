@@ -64,6 +64,54 @@ mm_sound_effect start = {
 	0,		// panning
 };
 
+mm_sound_effect choose = {
+	{ SFX_SELECT } ,			// id
+	(int)(1.0f * (1<<10)),	// rate
+	0,		// handle
+	255,	// volume
+	0,		// panning
+};
+
+mm_sound_effect resume = {
+	{ SFX_RESUME } ,			// id
+	(int)(1.0f * (1<<10)),	// rate
+	0,		// handle
+	255,	// volume
+	0,		// panning
+};
+
+mm_sound_effect pause = {
+	{ SFX_PAUSE } ,			// id
+	(int)(1.0f * (1<<10)),	// rate
+	0,		// handle
+	255,	// volume
+	0,		// panning
+};
+
+mm_sound_effect easy = {
+	{ SFX_EASY } ,			// id
+	(int)(1.0f * (1<<10)),	// rate
+	0,		// handle
+	255,	// volume
+	0,		// panning
+};
+
+mm_sound_effect medium = {
+	{ SFX_MEDIUM } ,			// id
+	(int)(1.0f * (1<<10)),	// rate
+	0,		// handle
+	255,	// volume
+	0,		// panning
+};
+
+mm_sound_effect hard = {
+	{ SFX_HARD } ,			// id
+	(int)(1.0f * (1<<10)),	// rate
+	0,		// handle
+	255,	// volume
+	0,		// panning
+};
+
 static void CheckInput() {
 	scanKeys();
 	int pressed = keysDown();
@@ -167,12 +215,14 @@ static void DifficultySelect() {
 		int pressed = keysDown();
 
 		if ((pressed & KEY_DOWN) && Selection < 14) {
+			mmEffectEx(&choose);
 			POSCursor(9, Selection);
 			iprintf(" ");
 			Selection = Selection + 2;
 			POSCursor(9, Selection);
 			iprintf(">");
 		} else if ((pressed & KEY_UP) && Selection > 10) {
+			mmEffectEx(&choose);
 			POSCursor(9, Selection);
 			iprintf(" ");
 			Selection = Selection - 2;
@@ -184,14 +234,17 @@ static void DifficultySelect() {
 			{
 				case 10:
 					Speed = 500;
+					mmEffectEx(&easy);
 				break;
 				
 				case 12:
 					Speed = 250;
+					mmEffectEx(&medium);
 				break;
 
 				case 14:
 					Speed = 100;
+					mmEffectEx(&hard);
 				break;
 
 				default:
@@ -244,6 +297,9 @@ static void GenerateBall() {
 
 static void Loose() {
 	iprintf("\x1b[2J");
+	consoleSelect(&bottomScreen);
+	iprintf("\x1b[2J");
+	consoleSelect(&topScreen);
 	GenBall = true;
 	Start = false;
 	for (size_t i = 1; i < 254; i++) {
@@ -286,6 +342,7 @@ static void ManageSnakePos() {
 		mmEffectEx(&increase);
 		Score++;
 		SnakeLength++;
+		BallEaten = true;
 		GenBall = true;
 	}
 	SnakeX = SnakeX + VSnakeX;
@@ -301,6 +358,7 @@ static void PrintGameStats() {
 }
 
 static void Pause() {
+	mmEffectEx(&pause);
 	iprintf("\x1b[2J");
 	POSCursor(12, 10);
 	iprintf("Paused!");
@@ -312,6 +370,7 @@ static void Pause() {
 		scanKeys();
 		int pressed = keysDown();
 		if (pressed & KEY_START) {
+			mmEffectEx(&resume);
 			iprintf("\x1b[2J");
 			RenderBorders(false, false);
 			for (size_t i = 1; i < SnakeLength; i++) {
